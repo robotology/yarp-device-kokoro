@@ -79,6 +79,7 @@ private:
     std::string m_language{"en"};
     std::string m_kokoroLanguage{"a"};
     std::string m_voice{"auto"};
+    bool m_voiceExplicit{false};
     double m_speed{1.0};
     double m_pitch{0.0};
 };

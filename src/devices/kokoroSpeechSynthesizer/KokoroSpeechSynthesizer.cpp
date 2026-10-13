@@ -454,7 +454,7 @@ yarp::dev::ReturnValue KokoroSpeechSynthesizer::setLanguage(const std::string& l
     std::lock_guard<std::mutex> lock(m_mutex);
     m_language = language;
     m_kokoroLanguage = code;
-    if (m_voice.empty() || m_voice == "auto") {
+    if (!m_voiceExplicit) {
         m_voice = defaultVoiceFor(code);
     }
     return yarp::dev::ReturnValue::return_code::return_value_ok;
@@ -470,7 +470,8 @@ yarp::dev::ReturnValue KokoroSpeechSynthesizer::getLanguage(std::string& languag
 yarp::dev::ReturnValue KokoroSpeechSynthesizer::setVoice(const std::string& voice_name)
 {
     std::lock_guard<std::mutex> lock(m_mutex);
-    m_voice = voice_name == "auto" ? defaultVoiceFor(m_kokoroLanguage) : voice_name;
+    m_voiceExplicit = voice_name != "auto";
+    m_voice = m_voiceExplicit ? voice_name : defaultVoiceFor(m_kokoroLanguage);
     if (m_voice.empty()) {
         return yarp::dev::ReturnValue::return_code::return_value_error_generic;
     }
