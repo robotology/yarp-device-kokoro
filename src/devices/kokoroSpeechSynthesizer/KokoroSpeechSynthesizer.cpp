@@ -62,20 +62,15 @@ bool KokoroSpeechSynthesizer::open(yarp::os::Searchable& config)
         return true;
     }
 
-    if (config.check("python_executable")) {
-        m_pythonExecutable = config.find("python_executable").asString();
+    if (!parseParams(config)) {
+        yCError(KOKOROSPEECHSYNTHESIZER) << "Failed to parse device parameters";
+        return false;
     }
-    if (config.check("worker_script")) {
-        m_workerScript = config.find("worker_script").asString();
-    }
-    if (config.check("model_repository")) {
-        m_modelRepository = config.find("model_repository").asString();
-    }
-    // "device" is reserved by YARP for selecting this plugin. Use
-    // "torch_device" for the PyTorch execution device instead.
-    if (config.check("torch_device")) {
-        m_device = config.find("torch_device").asString();
-    }
+    m_pythonExecutable = m_python_executable;
+    m_workerScript = m_worker_script;
+    m_modelRepository = m_model_repository;
+    m_device = m_torch_device;
+    m_voiceExplicit = config.check("voice") && m_voice != "auto";
 
     if (m_workerScript.empty()) {
 #ifdef KOKORO_WORKER_SCRIPT_SOURCE
@@ -94,20 +89,9 @@ bool KokoroSpeechSynthesizer::open(yarp::os::Searchable& config)
         return false;
     }
 
-    if (config.check("language") && !setLanguage(config.find("language").asString())) {
+    if (!setLanguage(m_language) || !setVoice(m_voice)
+        || !setSpeed(m_speed) || !setPitch(m_pitch)) {
         return false;
-    }
-    if (config.check("voice") && !setVoice(config.find("voice").asString())) {
-        return false;
-    }
-    if (config.check("speed") && !setSpeed(config.find("speed").asFloat64())) {
-        return false;
-    }
-    if (config.check("pitch") && !setPitch(config.find("pitch").asFloat64())) {
-        return false;
-    }
-    if (m_voice == "auto") {
-        setVoice("auto");
     }
 
     if (!startWorker()) {
@@ -116,7 +100,7 @@ bool KokoroSpeechSynthesizer::open(yarp::os::Searchable& config)
     }
     m_open = true;
     yCInfo(KOKOROSPEECHSYNTHESIZER) << "Kokoro speech synthesizer opened with language"
-                                     << m_language << "and voice" << m_voice;
+                                     << m_currentLanguage << "and voice" << m_currentVoice;
     return true;
 }
 
@@ -339,8 +323,8 @@ bool KokoroSpeechSynthesizer::workerSynthesize(const std::string& text,
     }
     // Language and voice are restricted to the Kokoro alphabet and are sent
     // as plain fields. Text is base64 encoded so arbitrary UTF-8 is safe.
-    const std::string request = "SYNTH " + m_kokoroLanguage + " " + m_voice + " "
-                              + std::to_string(m_speed) + " " + base64Encode(text) + "\n";
+    const std::string request = "SYNTH " + m_kokoroLanguage + " " + m_currentVoice + " "
+                              + std::to_string(m_currentSpeed) + " " + base64Encode(text) + "\n";
     if (!writeAll(request)) {
         yCError(KOKOROSPEECHSYNTHESIZER) << "Unable to write to Kokoro worker";
         return false;
@@ -452,10 +436,10 @@ yarp::dev::ReturnValue KokoroSpeechSynthesizer::setLanguage(const std::string& l
         return yarp::dev::ReturnValue::return_code::return_value_error_generic;
     }
     std::lock_guard<std::mutex> lock(m_mutex);
-    m_language = language;
+    m_currentLanguage = language;
     m_kokoroLanguage = code;
     if (!m_voiceExplicit) {
-        m_voice = defaultVoiceFor(code);
+        m_currentVoice = defaultVoiceFor(code);
     }
     return yarp::dev::ReturnValue::return_code::return_value_ok;
 }
@@ -463,7 +447,7 @@ yarp::dev::ReturnValue KokoroSpeechSynthesizer::setLanguage(const std::string& l
 yarp::dev::ReturnValue KokoroSpeechSynthesizer::getLanguage(std::string& language)
 {
     std::lock_guard<std::mutex> lock(m_mutex);
-    language = m_language;
+    language = m_currentLanguage;
     return yarp::dev::ReturnValue::return_code::return_value_ok;
 }
 
@@ -471,8 +455,8 @@ yarp::dev::ReturnValue KokoroSpeechSynthesizer::setVoice(const std::string& voic
 {
     std::lock_guard<std::mutex> lock(m_mutex);
     m_voiceExplicit = voice_name != "auto";
-    m_voice = m_voiceExplicit ? voice_name : defaultVoiceFor(m_kokoroLanguage);
-    if (m_voice.empty()) {
+    m_currentVoice = m_voiceExplicit ? voice_name : defaultVoiceFor(m_kokoroLanguage);
+    if (m_currentVoice.empty()) {
         return yarp::dev::ReturnValue::return_code::return_value_error_generic;
     }
     return yarp::dev::ReturnValue::return_code::return_value_ok;
@@ -481,7 +465,7 @@ yarp::dev::ReturnValue KokoroSpeechSynthesizer::setVoice(const std::string& voic
 yarp::dev::ReturnValue KokoroSpeechSynthesizer::getVoice(std::string& voice_name)
 {
     std::lock_guard<std::mutex> lock(m_mutex);
-    voice_name = m_voice;
+    voice_name = m_currentVoice;
     return yarp::dev::ReturnValue::return_code::return_value_ok;
 }
 
@@ -492,14 +476,14 @@ yarp::dev::ReturnValue KokoroSpeechSynthesizer::setSpeed(const double speed)
         return yarp::dev::ReturnValue::return_code::return_value_error_generic;
     }
     std::lock_guard<std::mutex> lock(m_mutex);
-    m_speed = speed;
+    m_currentSpeed = speed;
     return yarp::dev::ReturnValue::return_code::return_value_ok;
 }
 
 yarp::dev::ReturnValue KokoroSpeechSynthesizer::getSpeed(double& speed)
 {
     std::lock_guard<std::mutex> lock(m_mutex);
-    speed = m_speed;
+    speed = m_currentSpeed;
     return yarp::dev::ReturnValue::return_code::return_value_ok;
 }
 
@@ -511,14 +495,14 @@ yarp::dev::ReturnValue KokoroSpeechSynthesizer::setPitch(const double pitch)
     std::lock_guard<std::mutex> lock(m_mutex);
     // Kokoro does not expose pitch as a synthesis parameter. Keep the value
     // for interface compatibility, but document that it has no audio effect.
-    m_pitch = pitch;
+    m_currentPitch = pitch;
     return yarp::dev::ReturnValue::return_code::return_value_ok;
 }
 
 yarp::dev::ReturnValue KokoroSpeechSynthesizer::getPitch(double& pitch)
 {
     std::lock_guard<std::mutex> lock(m_mutex);
-    pitch = m_pitch;
+    pitch = m_currentPitch;
     return yarp::dev::ReturnValue::return_code::return_value_ok;
 }
 

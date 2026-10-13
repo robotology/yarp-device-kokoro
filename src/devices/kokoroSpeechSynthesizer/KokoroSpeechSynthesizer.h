@@ -10,6 +10,8 @@
 #include <yarp/dev/ISpeechSynthesizer.h>
 #include <yarp/sig/Sound.h>
 
+#include "KokoroSpeechSynthesizer_ParamsParser.h"
+
 #include <mutex>
 #include <string>
 #include <vector>
@@ -29,6 +31,7 @@
  */
 class KokoroSpeechSynthesizer final :
         public yarp::dev::DeviceDriver,
+        public KokoroSpeechSynthesizer_ParamsParser,
         public yarp::dev::ISpeechSynthesizer
 {
 public:
@@ -76,12 +79,12 @@ private:
     std::string m_workerScript;
     std::string m_modelRepository;
     std::string m_device;
-    std::string m_language{"en"};
+    std::string m_currentLanguage{"en"};
     std::string m_kokoroLanguage{"a"};
-    std::string m_voice{"auto"};
+    std::string m_currentVoice{"auto"};
     bool m_voiceExplicit{false};
-    double m_speed{1.0};
-    double m_pitch{0.0};
+    double m_currentSpeed{1.0};
+    double m_currentPitch{0.0};
 };
 
 #endif // YARP_KOKOROSPEECHSYNTHESIZER_H

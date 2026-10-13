@@ -10,11 +10,14 @@ yarp_prepare_plugin(kokoroSpeechSynthesizer
 
 if(NOT SKIP_kokoroSpeechSynthesizer)
   yarp_add_plugin(yarp_kokoroSpeechSynthesizer)
+  generateDeviceParamsParser(KokoroSpeechSynthesizer kokoroSpeechSynthesizer)
 
   target_sources(yarp_kokoroSpeechSynthesizer
     PRIVATE
       KokoroSpeechSynthesizer.cpp
       KokoroSpeechSynthesizer.h
+      KokoroSpeechSynthesizer_ParamsParser.cpp
+      KokoroSpeechSynthesizer_ParamsParser.h
   )
 
   target_compile_definitions(yarp_kokoroSpeechSynthesizer

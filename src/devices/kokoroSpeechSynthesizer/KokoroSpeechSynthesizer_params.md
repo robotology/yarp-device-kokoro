@@ -1,0 +1,8 @@
+| | python_executable    | string | -     | python3              | No       | Python interpreter containing the kokoro package.                                                                |       |
+| | worker_script        | string | -     | -                    | No       | Path to kokoro_worker.py. If omitted, the build or installed worker is used.                                   |       |
+| | model_repository     | string | -     | hexgrad/Kokoro-82M  | No       | Hugging Face model repository used by Kokoro.                                                                    |       |
+| | torch_device         | string | -     | -                    | No       | PyTorch execution device, for example cpu or cuda. The empty value lets PyTorch/Kokoro choose automatically.    |       |
+| | language             | string | -     | en                   | No       | Speech language: en, en-gb, es, fr, hi, it, ja, pt-br, zh, or a Kokoro language code.                           |       |
+| | voice                | string | -     | auto                 | No       | Kokoro voice name, for example af_heart or bf_emma.                                                             |       |
+| | speed                | double | -     | 1                    | No       | Speech speed in the range (0, 4].                                                                                |       |
+| | pitch                | double | -     | 0                    | No       | Stored for ISpeechSynthesizer compatibility. Kokoro currently does not apply pitch.                             |       |
