@@ -47,5 +47,7 @@ if(NOT SKIP_kokoroSpeechSynthesizer)
     COMPONENT yarp-device-kokoroSpeechSynthesizer
   )
 
+  add_subdirectory(smoke)
+
   set_property(TARGET yarp_kokoroSpeechSynthesizer PROPERTY FOLDER "Plugins/Device")
 endif()

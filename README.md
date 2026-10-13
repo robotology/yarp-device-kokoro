@@ -84,6 +84,44 @@ yarp::sig::Sound sound;
 synthesizer->synthesize("Hello from YARP and Kokoro.", sound);
 ```
 
+## Tests
+
+Two test suites are provided.
+
+### Standalone smoke test
+
+A self-contained smoke test that needs no Catch2 and only the core YARP
+libraries. It opens the device, exercises the set/get interface methods, and
+actually synthesizes audio (loading/running the Kokoro model). Build it with
+CMake (enabled by default via `BUILD_KOKORO_SMOKE_TEST=ON`):
+
+```bash
+cmake -S . -B build -DYARP_DIR=/path/to/yarp/build
+cmake --build build -j
+```
+
+Run the binary with a Python environment that has the `kokoro` package. The
+worker's default interpreter is `python3`; override it with the `KOKORO_PYTHON`
+environment variable if needed. Make sure the built plugin is found on
+`YARP_DATA_DIRS`:
+
+```bash
+export YARP_DATA_DIRS=/path/to/yarp/build/share/yarp:$PWD/build/share/yarp
+export LD_LIBRARY_PATH=/path/to/yarp/build/lib:$PWD/build/lib/yarp:$PWD/build/lib
+./build/bin/kokoroSmokeTest en af_heart
+```
+
+On success it prints a `SYNTHESIZED freq=... samples=... channels=...` line and
+exits 0. The first run may download/load the Kokoro model.
+
+### Catch2 dev_test suite
+
+The idiomatic YARP dev_test suite is built only when YARP is configured with
+the `catch2` and `dev_tests` components and `-DYARP_COMPILE_TESTS=ON` is set. It
+is discoverable via `ctest`. Most checks test only interface state and are
+fast; the actual model synthesis is opt-in via the `KOKORO_TEST_SYNTHESIZE`
+environment variable supporting `KOKORO_TEST_SYNTHESIZE=1` to run it.
+
 ## Repository history
 
 This directory is an independent Git repository. Commits are intentionally

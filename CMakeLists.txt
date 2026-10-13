@@ -11,6 +11,18 @@ set(YARP_FORCE_DYNAMIC_PLUGINS TRUE CACHE INTERNAL "yarp-device-kokoro uses a dy
 option(BUILD_SHARED_LIBS "Build libraries as shared as opposed to static" ON)
 find_package(YARP 4.0.0 COMPONENTS os sig dev REQUIRED)
 
+find_package(YARP 4.0.0 COMPONENTS catch2 dev_tests QUIET)
+if(YARP_catch2_FOUND AND YARP_dev_tests_FOUND)
+  option(YARP_COMPILE_TESTS "Enable YARP dev tests" OFF)
+  if(YARP_COMPILE_TESTS)
+    enable_testing()
+  endif()
+  message(STATUS "yarp_catch2 and yarp_dev_tests libraries found")
+else()
+  set(YARP_COMPILE_TESTS OFF CACHE BOOL "YARP catch2/dev_tests not found; tests cannot be enabled" FORCE)
+  message(STATUS "yarp_catch2 and yarp_dev_tests libraries NOT found. Tests cannot be enabled")
+endif()
+
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_BINDIR}")
@@ -24,6 +36,8 @@ add_install_rpath_support(BIN_DIRS "${CMAKE_INSTALL_FULL_BINDIR}"
                           USE_LINK_PATH)
 
 add_subdirectory(src)
+add_subdirectory(tests)
+
 
 include(FeatureSummary)
 feature_summary(WHAT ALL INCLUDE_QUIET_PACKAGES)
