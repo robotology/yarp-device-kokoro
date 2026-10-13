@@ -9,18 +9,23 @@ find_package(YCM 0.15.3 REQUIRED)
 
 set(YARP_FORCE_DYNAMIC_PLUGINS TRUE CACHE INTERNAL "yarp-device-kokoro uses a dynamic plugin")
 option(BUILD_SHARED_LIBS "Build libraries as shared as opposed to static" ON)
+option(BUILD_KOKORO_SMOKE_TEST "Build the standalone Kokoro smoke test (core YARP only)" ON)
 find_package(YARP 4.0.0 COMPONENTS os sig dev REQUIRED)
 
 find_package(YARP 4.0.0 COMPONENTS catch2 dev_tests QUIET)
 if(YARP_catch2_FOUND AND YARP_dev_tests_FOUND)
   option(YARP_COMPILE_TESTS "Enable YARP dev tests" OFF)
-  if(YARP_COMPILE_TESTS)
-    enable_testing()
-  endif()
   message(STATUS "yarp_catch2 and yarp_dev_tests libraries found")
 else()
   set(YARP_COMPILE_TESTS OFF CACHE BOOL "YARP catch2/dev_tests not found; tests cannot be enabled" FORCE)
   message(STATUS "yarp_catch2 and yarp_dev_tests libraries NOT found. Tests cannot be enabled")
+endif()
+
+# enable_testing() must run regardless of whether YARP catch2/dev_tests are
+# available: the standalone smoke test registers itself with CTest too.
+if(YARP_COMPILE_TESTS OR BUILD_KOKORO_SMOKE_TEST)
+  set(BUILD_TESTING ON)
+  enable_testing()
 endif()
 
 set(CMAKE_CXX_EXTENSIONS OFF)
