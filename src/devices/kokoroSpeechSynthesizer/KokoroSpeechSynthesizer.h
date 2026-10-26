@@ -71,6 +71,7 @@ private:
     int m_workerInput{-1};
     int m_workerOutput{-1};
     pid_t m_workerPid{-1};
+    std::string m_readBuffer;
 #endif
 
     std::mutex m_mutex;

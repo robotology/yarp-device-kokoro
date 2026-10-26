@@ -37,9 +37,10 @@ def main() -> int:
     if not args.stdio:
         parser.error("only --stdio mode is supported")
 
-    # Imports happen after the parent receives no output. This keeps the
-    # worker's startup handshake fast; the first synthesis reports import or
-    # model-download errors as a normal ERR response.
+    # Import failures are reported as an ERR line in place of READY, so the
+    # device fails at open() time. Model download/loading is deferred to the
+    # first synthesis for each language, which reports errors as a normal ERR
+    # response.
     try:
         import numpy as np
         from kokoro import KPipeline

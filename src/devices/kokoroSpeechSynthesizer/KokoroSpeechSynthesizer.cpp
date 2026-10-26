@@ -16,6 +16,7 @@
 #include <cctype>
 #include <cstring>
 #include <fstream>
+#include <locale>
 #include <sstream>
 
 #if defined(__unix__) || defined(__APPLE__)
@@ -204,6 +205,7 @@ void KokoroSpeechSynthesizer::stopWorker()
         }
         m_workerPid = -1;
     }
+    m_readBuffer.clear();
 #endif
 }
 
@@ -234,6 +236,14 @@ bool KokoroSpeechSynthesizer::readLine(std::string& line, int timeoutMs)
     line.clear();
     char buffer[4096];
     while (true) {
+        // Bytes after a newline belong to the next line: keep them for the
+        // next call instead of dropping them.
+        const auto newline = std::find(m_readBuffer.begin(), m_readBuffer.end(), '\n');
+        if (newline != m_readBuffer.end()) {
+            line.assign(m_readBuffer.begin(), newline);
+            m_readBuffer.erase(m_readBuffer.begin(), newline + 1);
+            return true;
+        }
         struct pollfd descriptor{};
         descriptor.fd = m_workerOutput;
         descriptor.events = POLLIN;
@@ -245,14 +255,7 @@ bool KokoroSpeechSynthesizer::readLine(std::string& line, int timeoutMs)
         if (count <= 0) {
             return false;
         }
-        const char* begin = buffer;
-        const char* end = buffer + count;
-        const char* newline = std::find(begin, end, '\n');
-        if (newline != end) {
-            line.append(begin, newline);
-            return true;
-        }
-        line.append(begin, end);
+        m_readBuffer.append(buffer, static_cast<size_t>(count));
     }
 #else
     (void)line;
@@ -323,8 +326,14 @@ bool KokoroSpeechSynthesizer::workerSynthesize(const std::string& text,
     }
     // Language and voice are restricted to the Kokoro alphabet and are sent
     // as plain fields. Text is base64 encoded so arbitrary UTF-8 is safe.
+    // The speed is formatted with the classic locale: std::to_string follows
+    // the C locale and would emit "1,500000" under e.g. it_IT, which Python's
+    // float() rejects.
+    std::ostringstream speedText;
+    speedText.imbue(std::locale::classic());
+    speedText << m_currentSpeed;
     const std::string request = "SYNTH " + m_kokoroLanguage + " " + m_currentVoice + " "
-                              + std::to_string(m_currentSpeed) + " " + base64Encode(text) + "\n";
+                              + speedText.str() + " " + base64Encode(text) + "\n";
     if (!writeAll(request)) {
         yCError(KOKOROSPEECHSYNTHESIZER) << "Unable to write to Kokoro worker";
         return false;
