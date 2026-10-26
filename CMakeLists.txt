@@ -40,6 +40,9 @@ add_install_rpath_support(BIN_DIRS "${CMAKE_INSTALL_FULL_BINDIR}"
                           INSTALL_NAME_DIR "${CMAKE_INSTALL_FULL_LIBDIR}"
                           USE_LINK_PATH)
 
+yarp_configure_plugins_installation(${PROJECT_NAME})
+yarp_configure_external_installation(${PROJECT_NAME})
+
 add_subdirectory(src)
 add_subdirectory(tests)
 

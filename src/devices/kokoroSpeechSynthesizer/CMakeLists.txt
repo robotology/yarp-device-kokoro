@@ -47,6 +47,11 @@ if(NOT SKIP_kokoroSpeechSynthesizer)
     COMPONENT yarp-device-kokoroSpeechSynthesizer
   )
 
+  install(FILES ${CMAKE_SOURCE_DIR}/resource/robotInterface/kokoroSpeechSynthesizer.xml
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/yarp-kokoro/robotInterface
+    COMPONENT yarp-device-kokoroSpeechSynthesizer
+  )
+
   if(YARP_COMPILE_TESTS)
     add_subdirectory(tests)
   endif()

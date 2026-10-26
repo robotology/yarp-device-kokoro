@@ -70,6 +70,23 @@ Useful configuration parameters:
 | `speed` | `1.0` | Positive Kokoro speed in `(0, 4]` |
 | `pitch` | `0.0` | Stored for interface compatibility; Kokoro currently does not apply pitch |
 
+## Run with the `yarprobotinterface`
+
+A ready-to-use `yarprobotinterface` configuration ships in
+[`resource/robotInterface/kokoroSpeechSynthesizer.xml`](resource/robotInterface/kokoroSpeechSynthesizer.xml).
+Start a YARP server, then launch the robot interface with:
+
+```bash
+yarprobotinterface -c resource/robotInterface/kokoroSpeechSynthesizer.xml
+```
+
+Edit that file to set your preferred `language`, `voice`, `speed`, or a custom
+`python_executable` / `worker_script`. If the plugin or config is not found
+from the current directory, point `YARP_DATA_DIRS` at the install/build share
+directories (as in the Tests section above). When installed via
+`cmake --install`, the config is copied to
+`<prefix>/share/yarp-kokoro/robotInterface/`.
+
 The plugin currently uses POSIX pipes/processes (Linux and macOS). On Windows,
 run the Python worker separately and adapt the transport before using the
 plugin.
