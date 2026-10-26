@@ -62,8 +62,9 @@ SPDX-License-Identifier: BSD-3-Clause
 
     <!-- YARP network wrapper server: exposes the kokoro device over YARP
          ports so remote clients can use it through ISpeechSynthesizer_nwc_yarp.
-         This opens /speechSynthesizer/... ports. Adjust the `name` below if a
-         different port prefix is desired. -->
+         With the `name` below it opens /kokoroTTS/rpc, /kokoroTTS/text:i and
+         /kokoroTTS/sound:o. Change `name` if a different port prefix is
+         desired. -->
     <device name="KokoroTTS_nws" type="speechSynthesizer_nws_yarp">
       <param name="name">
         /kokoroTTS
