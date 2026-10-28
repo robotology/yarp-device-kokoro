@@ -18,6 +18,8 @@
 #include <fstream>
 #include <locale>
 #include <sstream>
+#include <map>
+
 
 #if defined(__unix__) || defined(__APPLE__)
 #  include <fcntl.h>
@@ -35,6 +37,81 @@ namespace {
 
 const char* const kBase64Alphabet =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+
+const std::map<std::string, yarp::sig::VectorOfString> kokoroVoices = {
+    {"a", yarp::sig::VectorOfString{
+        "af_heart",
+        "af_alloy",
+        "af_aoede",
+        "af_bella",
+        "af_jessicas",
+        "af_kore",
+        "af_nicole",
+        "af_nova",
+        "af_river",
+        "af_sarah",
+        "af_sky",
+        "am_adam",
+        "am_echo",
+        "am_eric",
+        "am_fenrir",
+        "am_liam",
+        "am_michael",
+        "am_onyx",
+        "am_puck",
+        "am_santa"
+    }},
+    {"b", yarp::sig::VectorOfString{
+        "bf_alice",
+        "bf_emma",
+        "bf_isabella",
+        "bf_lily",
+        "bm_daniel",
+        "bm_fable",
+        "bm_george",
+        "bm_lewis"
+    }},
+    {"j", yarp::sig::VectorOfString{
+        "jf_alpha",
+        "jf_gongitsune",
+        "jf_nezumi",
+        "jf_tebukuro",
+        "jm_kumo"
+    }},
+    {"e", yarp::sig::VectorOfString{
+        "ef_dora",
+        "em_alex",
+        "em_santa"
+    }},
+    {"z", yarp::sig::VectorOfString{
+        "zf_xiaobei",
+        "zf_xiaoni",
+        "zf_xiaoxiao",
+        "zf_xiaoyi",
+        "zm_yunjian",
+        "zm_yunxi",
+        "zm_yunxia",
+        "zm_yunyang"
+    }},
+    {"f", yarp::sig::VectorOfString{
+        "ff_siwis"
+    }},
+    {"h", yarp::sig::VectorOfString{
+        "hf_alpha",
+        "hf_beta",
+        "hm_omega",
+        "hm_psi"
+    }},
+    {"i", yarp::sig::VectorOfString{
+        "if_sara",
+        "im_nicola"
+    }},
+    {"p", yarp::sig::VectorOfString{
+        "pf_dora",
+        "pm_alex",
+        "pm_santa"
+    }}
+};
 
 bool fileExists(const std::string& path)
 {
@@ -476,6 +553,17 @@ yarp::dev::ReturnValue KokoroSpeechSynthesizer::getVoice(std::string& voice_name
     std::lock_guard<std::mutex> lock(m_mutex);
     voice_name = m_currentVoice;
     return yarp::dev::ReturnValue::return_code::return_value_ok;
+}
+
+yarp::dev::ReturnValue KokoroSpeechSynthesizer::getAvailableVoices(yarp::sig::VectorOfString& voices)
+{
+    std::lock_guard<std::mutex> lock(m_mutex);
+    auto it = kokoroVoices.find(m_kokoroLanguage);
+    if (it != kokoroVoices.end()) {
+        voices = it->second;
+        return yarp::dev::ReturnValue::return_code::return_value_ok;
+    }
+    return yarp::dev::ReturnValue::return_code::return_value_error_generic;
 }
 
 yarp::dev::ReturnValue KokoroSpeechSynthesizer::setSpeed(const double speed)
