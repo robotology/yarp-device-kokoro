@@ -12,7 +12,7 @@ option(BUILD_SHARED_LIBS "Build libraries as shared as opposed to static" ON)
 option(BUILD_KOKORO_SMOKE_TEST "Build the standalone Kokoro smoke test (core YARP only)" ON)
 find_package(YARP 4.0.0 COMPONENTS os sig dev REQUIRED)
 
-find_package(YARP 4.0.0 COMPONENTS catch2 dev_tests QUIET)
+find_package(YARP 4.0.0 COMPONENTS serversql catch2 dev_tests QUIET)
 if(YARP_catch2_FOUND AND YARP_dev_tests_FOUND)
   option(YARP_COMPILE_TESTS "Enable YARP dev tests" OFF)
   message(STATUS "yarp_catch2 and yarp_dev_tests libraries found")
